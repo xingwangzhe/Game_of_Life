@@ -24,15 +24,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install MoonBit CLI
+      - name: Install MoonBit CLI (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; iwr https://cli.moonbitlang.cn/install/powershell.ps1 -UseBasicParsing | iex"
-            echo "$Env:USERPROFILE/.moon/bin" >> $GITHUB_PATH
-          else
-            curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
-            echo "$HOME/.moon/bin" >> $GITHUB_PATH
-          fi
+          Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+          iwr https://cli.moonbitlang.cn/install/powershell.ps1 -UseBasicParsing | iex
+          "$Env:USERPROFILE/.moon/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          moon version
+
+      - name: Install MoonBit CLI (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+          moon version
 
       - name: Install system dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
