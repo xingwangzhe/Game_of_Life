@@ -26,8 +26,13 @@ jobs:
 
       - name: Install MoonBit CLI
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install.sh | bash
-          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; iwr https://cli.moonbitlang.cn/install/powershell.ps1 -UseBasicParsing | iex"
+            echo "$Env:USERPROFILE/.moon/bin" >> $GITHUB_PATH
+          else
+            curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
+            echo "$HOME/.moon/bin" >> $GITHUB_PATH
+          fi
 
       - name: Install system dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
@@ -76,7 +81,7 @@ jobs:
 
       - name: Install MoonBit CLI
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install.sh | bash
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Setup Bun
@@ -141,7 +146,7 @@ jobs:
 
       - name: Install MoonBit CLI
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install.sh | bash
+          curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Setup Bun
