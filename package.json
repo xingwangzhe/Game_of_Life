@@ -9,7 +9,9 @@
     "run": "bun x wasm4 run src/target/wasm-gc/release/build/Game_of_Life.wasm",
     "run:wasm": "bun x wasm4 run src/target/wasm/release/build/Game_of_Life.wasm",
     "bundle": "bun run build && mkdir -p dist && bun x wasm4 bundle src/target/wasm-gc/release/build/Game_of_Life.wasm --html dist/cart.html --title 'Game of Life' --description 'Conway\"s Game of Life (MoonBit + WASM-4)' && cp src/target/wasm-gc/release/build/Game_of_Life.wasm dist/ && cp src/host_template.html dist/index.html",
-    "dev": "bun run bundle && bunx serve -l 5173 dist"
+    "dev": "bun run bundle && bunx serve -l 5173 dist",
+    "tauri:dev": "cd src-tauri && cargo tauri dev",
+    "tauri:build": "cd src-tauri && cargo tauri build"
   },
   "keywords": [
     "game-of-life",
