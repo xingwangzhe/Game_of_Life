@@ -290,7 +290,7 @@ jobs:
             echo "Android 项目已存在，跳过 init"
           else
             cd src-tauri
-            cargo tauri android init --force
+            cargo tauri android init 
           fi
 
       - name: Build Android Debug APK (universal)
@@ -432,7 +432,7 @@ jobs:
             echo "iOS 项目已存在，跳过 init"
           else
             cd src-tauri
-            cargo tauri ios init --force
+            cargo tauri ios init 
           fi
 
       - name: Build iOS Debug (simulator + device)
