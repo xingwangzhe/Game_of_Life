@@ -1,0 +1,4 @@
+[install]
+# 使用淘宝 npm 镜像源，提高国内下载速度
+registry = "https://registry.npmmirror.com/"
+

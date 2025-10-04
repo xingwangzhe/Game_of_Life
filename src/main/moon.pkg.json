@@ -1,9 +1,0 @@
-{
-  "is-main": true,
-  "import": [
-    {
-      "path": "xingwangzhe/Game_of_Life",
-      "alias": "lib"
-    }
-  ]
-}

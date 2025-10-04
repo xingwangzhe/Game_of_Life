@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "xingwangzhe/Game_of_Life"
+
+// Values
+fn fib(Int) -> Int64
+
+// Errors
+
+// Types and methods
+pub struct GameOfLife {
+  width : Int
+  height : Int
+  mut current : Array[Bool]
+  mut next : Array[Bool]
+}
+fn GameOfLife::count_neighbors(Self, Int, Int) -> Int
+fn GameOfLife::get_cell(Self, Int, Int) -> Bool
+fn GameOfLife::new(Int, Int) -> Self
+fn GameOfLife::set_cell(Self, Int, Int, Bool) -> Unit
+fn GameOfLife::setup_glider(Self, Int, Int) -> Unit
+fn GameOfLife::update(Self) -> Unit
+
+// Type aliases
+
+// Traits
+
