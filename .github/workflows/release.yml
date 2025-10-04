@@ -121,6 +121,25 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
+      - name: Cache Bun install cache
+        if: runner.os != 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Cache Bun install cache (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: C:\Users\runneradmin\.bun\install\cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install frontend dependencies
         run: bun install
 
@@ -202,14 +221,31 @@ jobs:
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
 
+      - name: Cache cargo (tauri-cli)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-tauri
+            ~/.cargo/bin/cargo-tauri.exe
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-tauri-v2
+          restore-keys: |
+            ${{ runner.os }}-cargo-tauri-
+            ${{ runner.os }}-cargo-
+
       - name: Install Tauri CLI (cargo)
         run: |
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           export PATH="$HOME/.cargo/bin:$PATH"
-          # 优先带 --locked 安装，失败则回退
-          if ! cargo install tauri-cli --locked ; then
-            echo '使用 --locked 安装失败，尝试不加 --locked'
-            cargo install tauri-cli || { echo '安装 tauri-cli 失败'; exit 1; }
+          if command -v cargo-tauri >/dev/null 2>&1; then
+            echo 'cargo-tauri 已存在，跳过安装'
+          else
+            # 优先带 --locked 安装，失败则回退
+            if ! cargo install tauri-cli --locked ; then
+              echo '使用 --locked 安装失败，尝试不加 --locked'
+              cargo install tauri-cli || { echo '安装 tauri-cli 失败'; exit 1; }
+            fi
           fi
           # 验证安装
           if ! command -v cargo-tauri >/dev/null 2>&1; then
@@ -221,6 +257,15 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -331,23 +376,49 @@ jobs:
         with:
           targets: aarch64-apple-ios,aarch64-apple-ios-sim
 
+      - name: Cache cargo (tauri-cli)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-tauri
+            ~/.cargo/bin/cargo-tauri.exe
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-tauri-v2
+          restore-keys: |
+            ${{ runner.os }}-cargo-tauri-
+            ${{ runner.os }}-cargo-
+
       - name: Install Tauri CLI (cargo)
         run: |
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
           export PATH="$HOME/.cargo/bin:$PATH"
-          if ! cargo install tauri-cli --locked ; then
-            echo '使用 --locked 安装失败，尝试不加 --locked'
-            cargo install tauri-cli || { echo '安装 tauri-cli 失败'; exit 1; }
+          if command -v cargo-tauri >/dev/null 2>&1; then
+            echo 'cargo-tauri 已存在，跳过安装'
+          else
+            if ! cargo install tauri-cli --locked ; then
+              echo '使用 --locked 安装失败，尝试不加 --locked'
+              cargo install tauri-cli || { echo '安装 tauri-cli 失败'; exit 1; }
+            fi
           fi
           if ! command -v cargo-tauri >/dev/null 2>&1; then
             echo '未找到 cargo-tauri 可执行文件'; ls -al "$HOME/.cargo/bin"; exit 1;
           fi
-            cargo tauri --version
+          cargo tauri --version
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Install frontend deps
         run: bun install
