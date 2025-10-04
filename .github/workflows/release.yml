@@ -24,6 +24,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: MoonBit CLI cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.moon
+          key: ${{ runner.os }}-moon-${{ hashFiles('**/moon.pkg.json','moon.mod.json') }}
+          restore-keys: |
+            ${{ runner.os }}-moon-
+
       - name: Install MoonBit CLI (Windows)
         if: runner.os == 'Windows'
         shell: powershell
@@ -48,7 +56,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          moon update || echo "moon update 可能已部分失败, 后续 build 若仍失败请检查网络/registry"
+          moon update
+          if ($LASTEXITCODE -ne 0) {
+            Write-Warning "moon update 执行失败(可能网络/registry问题)，继续后续构建"
+          } else {
+            Write-Host "moon update 成功"
+          }
 
       - name: Install MoonBit CLI (Unix)
         if: runner.os != 'Windows'
@@ -65,7 +78,12 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: |
-          moon update || echo "moon update 遇到问题(可能网络), 继续尝试构建"
+          set -e
+          if moon update; then
+            echo "moon update 成功"
+          else
+            echo "[警告] moon update 失败(可能网络/registry)，继续后续构建" >&2
+          fi
 
       - name: Install system dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
@@ -127,6 +145,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: MoonBit CLI cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.moon
+          key: ${{ runner.os }}-moon-${{ hashFiles('**/moon.pkg.json','moon.mod.json') }}
+          restore-keys: |
+            ${{ runner.os }}-moon-
+
       - name: Install MoonBit CLI
         run: |
           curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
@@ -136,7 +162,12 @@ jobs:
 
       - name: MoonBit registry update
         run: |
-          moon update || echo "moon update 遇到问题(可能网络), 继续尝试构建"
+          set -e
+          if moon update; then
+            echo "moon update 成功"
+          else
+            echo "[警告] moon update 失败(可能网络/registry)，继续后续构建" >&2
+          fi
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -206,8 +237,12 @@ jobs:
 
       - name: Init Android project (若已存在 gen/android 可去掉)
         run: |
-          cd src-tauri
-          cargo tauri android init --force
+          if [ -d src-tauri/gen/android ]; then
+            echo "Android 项目已存在，跳过 init"
+          else
+            cd src-tauri
+            cargo tauri android init --force
+          fi
 
       - name: Build Android APK (Debug Universal)
         run: |
@@ -228,6 +263,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: MoonBit CLI cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.moon
+          key: ${{ runner.os }}-moon-${{ hashFiles('**/moon.pkg.json','moon.mod.json') }}
+          restore-keys: |
+            ${{ runner.os }}-moon-
+
       - name: Install MoonBit CLI
         run: |
           curl -fsSL https://cli.moonbitlang.cn/install/unix.sh | bash
@@ -237,7 +280,12 @@ jobs:
 
       - name: MoonBit registry update
         run: |
-          moon update || echo "moon update 遇到问题(可能网络), 继续尝试构建"
+          set -e
+          if moon update; then
+            echo "moon update 成功"
+          else
+            echo "[警告] moon update 失败(可能网络/registry)，继续后续构建" >&2
+          fi
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -290,8 +338,12 @@ jobs:
 
       - name: Init iOS project (若已存在 gen/apple 可去掉)
         run: |
-          cd src-tauri
-          cargo tauri ios init --force
+          if [ -d src-tauri/gen/apple ]; then
+            echo "iOS 项目已存在，跳过 init"
+          else
+            cd src-tauri
+            cargo tauri ios init --force
+          fi
 
       - name: Build iOS (Debug)
         run: |
