@@ -58,9 +58,9 @@ jobs:
         run: |
           moon update
           if ($LASTEXITCODE -ne 0) {
-            Write-Warning "moon update 执行失败(可能网络/registry问题)，继续后续构建"
+            Write-Warning 'moon update failed (network/registry issue); continuing build'
           } else {
-            Write-Host "moon update 成功"
+            Write-Host 'moon update succeeded'
           }
 
       - name: Install MoonBit CLI (Unix)
