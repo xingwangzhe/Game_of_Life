@@ -78,6 +78,22 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup Node (npm)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies with npm
+        run: |
+          npm install
+          npx wasm4 --version || echo "npx wasm4 暂不可用(可能未装), 继续"
+
+      - name: Verify wasm4 via bun & npm
+        run: |
+          bun x wasm4 --version || echo "bun x wasm4 失败"
+          npx wasm4 --version || echo "npx wasm4 失败"
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -127,6 +143,22 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
+
+      - name: Setup Node (npm)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies with npm
+        run: |
+          npm install
+          npx wasm4 --version || echo "npx wasm4 暂不可用(可能未装), 继续"
+
+      - name: Verify wasm4 via bun & npm
+        run: |
+          bun x wasm4 --version || echo "bun x wasm4 失败"
+          npx wasm4 --version || echo "npx wasm4 失败"
 
       - name: Setup Java (Android 构建需要 JDK 17)
         uses: actions/setup-java@v4
@@ -213,6 +245,22 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
+
+      - name: Setup Node (npm)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies with npm
+        run: |
+          npm install
+          npx wasm4 --version || echo "npx wasm4 暂不可用(可能未装), 继续"
+
+      - name: Verify wasm4 via bun & npm
+        run: |
+          bun x wasm4 --version || echo "bun x wasm4 失败"
+          npx wasm4 --version || echo "npx wasm4 失败"
 
       - name: Install Rust (iOS 目标)
         uses: dtolnay/rust-toolchain@stable
