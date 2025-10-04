@@ -151,7 +151,26 @@ jobs:
         with:
           tagName: app-v__VERSION__
           releaseName: 'App v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseBody: |
+            ## 平台与构建产物
+
+            ### 桌面端（Release 附件）
+            - **macOS (Apple Silicon)**：`*-aarch64-apple-darwin.dmg/.app`，使用 *adhoc* 签名，仅供本地测试。首次启动可能被 Gatekeeper 拦截，请右键 → 打开确认。未 notarize。
+            - **macOS (Intel)**：`*-x86_64-apple-darwin.dmg/.app`，同样为 *adhoc* 签名，安全策略与上相同。
+            - **Windows**：`*.msi` / `*.exe`，未进行代码签名；Windows SmartScreen 会提示来源未知。安装前建议校验哈希，执行时关注系统告警。
+            - **Linux**：`*.AppImage` / `*.deb`，未签名。AppImage 需手动 `chmod +x` 后运行；Deb 包会提示未签名来源。
+
+            ### 移动端（Workflow Artifact）
+            - **Android Debug**：`android-apk-debug` 工件内含 `app-universal-debug.apk`，以 debug key 签名，只用于测试，系统会提示“来自未知来源”。
+            - **Android Release**：`android-apk-release` 内含 `app-universal-release-unsigned.apk`，尚未使用正式 keystore，需要手动签名＋对齐后方可商用分发。
+            - **iOS Simulator**：`ios-debug` / `ios-release` 工件提供 `.app` 目录（模拟器架构）。无需签名，可在 Xcode `Devices and Simulators` 中安装到模拟器。**不**能直接安装到真机。
+
+            ## 签名与安全说明
+              由于仅作为游戏演示，且本仓库公开，故所有平台均未使用正式签名证书（macOS 使用 adhoc 签名以便能构建可运行的 app）。因此，操作系统可能会对应用发出安全警告，请谨慎评估风险后决定是否继续安装与运行。
+            ## 已知风险
+            - 未签名构建在企业环境可能触发安全策略，需在受控环境中使用。
+            - 若需自动分发（App Store / Microsoft Store / Snap 等），请在本仓库之外维护签名密钥，避免在公共仓库暴露敏感凭据。
+            - CI 仅缓存构建依赖，不会持久化任何私钥；请勿将证书放入仓库或普通 Artifact。
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
@@ -438,7 +457,7 @@ jobs:
       - name: Build iOS Debug (simulator + device)
         run: |
           cd src-tauri
-          cargo tauri ios build
+          cargo tauri ios build --debug --simulator
 
       - name: Upload iOS Debug artifact
         uses: actions/upload-artifact@v4
@@ -451,7 +470,7 @@ jobs:
       - name: Build iOS Release (simulator + device)
         run: |
           cd src-tauri
-          cargo tauri ios build --release
+          cargo tauri ios build --release --simulator
 
       - name: Upload iOS Release artifact
         uses: actions/upload-artifact@v4
