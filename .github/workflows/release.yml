@@ -141,6 +141,8 @@ jobs:
   build-android:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -225,17 +227,19 @@ jobs:
 
       - name: Install Android SDK Components & NDK
         run: |
+          yes | sdkmanager --licenses || true
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" "ndk;25.2.9519653"
-          yes | sdkmanager --licenses
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
 
       - name: Install frontend deps
         run: bun install
 
-      - name: Prepare dist (WASM bundle)
+      - name: Build frontend (bundle dist)
         run: bun run bundle
 
-      - name: Init Android project (若已存在 gen/android 可去掉)
+      - name: Init Android project (conditional)
         run: |
           if [ -d src-tauri/gen/android ]; then
             echo "Android 项目已存在，跳过 init"
@@ -244,21 +248,36 @@ jobs:
             cargo tauri android init --force
           fi
 
-      - name: Build Android APK (Debug Universal)
+      - name: Build Android Debug APK (universal)
         run: |
           cd src-tauri
           cargo tauri android build --apk
 
-      - name: Upload APK artifact
+      - name: Upload Android Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
-          path: src-tauri/gen/android/**/outputs/**/*.apk
+          name: android-apk-debug
+          path: |
+            src-tauri/gen/android/**/outputs/**/*.apk
+
+      - name: Build Android Release APK (universal)
+        run: |
+          cd src-tauri
+          cargo tauri android build --apk --release
+
+      - name: Upload Android Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-release
+          path: |
+            src-tauri/gen/android/**/outputs/**/*.apk
 
   # iOS 构建（需要 macOS Runner，当前只生成未签名的 .app / .ipa Debug 产物）
   build-ios:
     if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
+    env:
+      CARGO_TERM_COLOR: always
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -333,10 +352,10 @@ jobs:
       - name: Install frontend deps
         run: bun install
 
-      - name: Prepare dist (WASM bundle)
+      - name: Build frontend (bundle dist)
         run: bun run bundle
 
-      - name: Init iOS project (若已存在 gen/apple 可去掉)
+      - name: Init iOS project (conditional)
         run: |
           if [ -d src-tauri/gen/apple ]; then
             echo "iOS 项目已存在，跳过 init"
@@ -345,15 +364,28 @@ jobs:
             cargo tauri ios init --force
           fi
 
-      - name: Build iOS (Debug)
+      - name: Build iOS Debug (simulator + device)
         run: |
           cd src-tauri
           cargo tauri ios build
 
-      - name: Upload iOS build artifact (.app / 产物目录)
+      - name: Upload iOS Debug artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build
+          name: ios-debug
+          path: |
+            src-tauri/gen/apple/**/*.app
+            src-tauri/gen/apple/**/Build/Products/**/*
+
+      - name: Build iOS Release (simulator + device)
+        run: |
+          cd src-tauri
+          cargo tauri ios build --release
+
+      - name: Upload iOS Release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release
           path: |
             src-tauri/gen/apple/**/*.app
             src-tauri/gen/apple/**/Build/Products/**/*
