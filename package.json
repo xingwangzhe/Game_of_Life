@@ -4,6 +4,7 @@
   "description": "Conway's Game of Life implemented in MoonBit for WASM-4",
   "main": "index.js",
   "scripts": {
+    "prebuild": "command -v moon >/dev/null 2>&1 || curl -fsSL https://cli.moonbitlang.com/install.sh | bash",
     "build": "cd src && moon build --target wasm-gc",
     "build:wasm": "cd src && moon build --target wasm",
     "run": "bun x wasm4 run src/target/wasm-gc/release/build/Game_of_Life.wasm",

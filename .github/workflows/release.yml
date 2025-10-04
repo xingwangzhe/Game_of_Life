@@ -24,6 +24,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install MoonBit CLI
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
       - name: Install system dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
         run: |
@@ -68,6 +73,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install MoonBit CLI
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -128,6 +138,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install MoonBit CLI
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
