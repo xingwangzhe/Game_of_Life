@@ -320,7 +320,7 @@ jobs:
         run: |
           cd src-tauri
           # Tauri 2: --debug flag for debug build, --apk to build APK
-          cargo tauri android build --debug --apk
+          cargo tauri android build --debug --apk true
 
       - name: Upload Android Debug APK
         uses: actions/upload-artifact@v4
@@ -333,7 +333,7 @@ jobs:
         run: |
           cd src-tauri
           # Tauri 2: release mode is default, use --apk to build APK
-          cargo tauri android build --apk
+          cargo tauri android build --apk true
 
       - name: Upload Android Release APK
         uses: actions/upload-artifact@v4
