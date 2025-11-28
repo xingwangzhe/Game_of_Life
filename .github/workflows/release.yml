@@ -160,9 +160,9 @@ jobs:
             - **Windows**：`*.msi` / `*.exe`，未进行代码签名；Windows SmartScreen 会提示来源未知。安装前建议校验哈希，执行时关注系统告警。
             - **Linux**：`*.AppImage` / `*.deb`，未签名。AppImage 需手动 `chmod +x` 后运行；Deb 包会提示未签名来源。
 
-            ### 移动端（Workflow Artifact）
-            - **Android Debug**：`android-apk-debug` 工件内含 `app-universal-debug.apk`，以 debug key 签名，只用于测试，系统会提示“来自未知来源”。
-            - **Android Release**：`android-apk-release` 内含 `app-universal-release-unsigned.apk`，尚未使用正式 keystore，需要手动签名＋对齐后方可商用分发。
+            ### 移动端（Release 附件）
+            - **Android Debug**：`*-debug.apk`，以 debug key 签名，只用于测试，系统会提示"来自未知来源"。
+            - **Android Release**：`*-release-unsigned.apk`，尚未使用正式 keystore，需要手动签名＋对齐后方可商用分发。
             - **iOS**：当前未自动产出 iOS 安装包；若需真机或模拟器构建，请手动运行 `cargo tauri ios ...` 并自行处理签名。
 
             ## 签名与安全说明
@@ -177,8 +177,11 @@ jobs:
 
   # Android 构建（使用 Tauri v2 移动支持）
   build-android:
+    needs: build-tauri  # 等待 build-tauri 完成以确保 release draft 已创建
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 需要写权限来上传到 release
     env:
       CARGO_TERM_COLOR: always
     steps:
@@ -322,7 +325,7 @@ jobs:
           # Tauri 2: --debug flag for debug build, --apk to build APK
           cargo tauri android build --debug --apk true
 
-      - name: Upload Android Debug APK
+      - name: Upload Android Debug APK (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-debug
@@ -335,9 +338,44 @@ jobs:
           # Tauri 2: release mode is default, use --apk to build APK
           cargo tauri android build --apk true
 
-      - name: Upload Android Release APK
+      - name: Upload Android Release APK (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-release
           path: |
             src-tauri/gen/android/**/outputs/**/*.apk
+
+      - name: Get version from tauri.conf.json
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=app-v$VERSION" >> $GITHUB_OUTPUT
+          echo "App version: $VERSION, Release tag: app-v$VERSION"
+
+      - name: Prepare APKs for release upload
+        id: prepare_apks
+        run: |
+          mkdir -p release-apks
+          # Copy APKs with unique names based on build type (debug/release) and avoid collisions
+          find src-tauri/gen/android -name "*-debug.apk" -exec cp {} release-apks/ \;
+          find src-tauri/gen/android -name "*-release*.apk" -exec cp {} release-apks/ \;
+          # Check if any APKs were found
+          APK_COUNT=$(find release-apks -name "*.apk" | wc -l)
+          if [ "$APK_COUNT" -eq 0 ]; then
+            echo "No APK files found!"
+            exit 1
+          fi
+          echo "Found $APK_COUNT APK file(s):"
+          ls -la release-apks/
+          echo "apk_found=true" >> $GITHUB_OUTPUT
+
+      - name: Upload Android APKs to Release
+        if: steps.prepare_apks.outputs.apk_found == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          draft: true
+          files: release-apks/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
