@@ -354,12 +354,24 @@ jobs:
           echo "App version: $VERSION, Release tag: app-v$VERSION"
 
       - name: Prepare APKs for release upload
+        id: prepare_apks
         run: |
           mkdir -p release-apks
-          find src-tauri/gen/android -name "*.apk" -exec cp {} release-apks/ \;
+          # Copy APKs with unique names based on build type (debug/release) and avoid collisions
+          find src-tauri/gen/android -name "*-debug.apk" -exec cp {} release-apks/ \;
+          find src-tauri/gen/android -name "*-release*.apk" -exec cp {} release-apks/ \;
+          # Check if any APKs were found
+          APK_COUNT=$(find release-apks -name "*.apk" | wc -l)
+          if [ "$APK_COUNT" -eq 0 ]; then
+            echo "No APK files found!"
+            exit 1
+          fi
+          echo "Found $APK_COUNT APK file(s):"
           ls -la release-apks/
+          echo "apk_found=true" >> $GITHUB_OUTPUT
 
       - name: Upload Android APKs to Release
+        if: steps.prepare_apks.outputs.apk_found == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.tag }}
