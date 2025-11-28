@@ -319,8 +319,8 @@ jobs:
       - name: Build Android Debug APK (universal)
         run: |
           cd src-tauri
-          # Tauri CLI 现在要求 --apk 后面显式传入 true/false
-          cargo tauri android build --apk true
+          # Tauri 2: --debug flag for debug build, --apk to build APK
+          cargo tauri android build --debug --apk
 
       - name: Upload Android Debug APK
         uses: actions/upload-artifact@v4
@@ -332,8 +332,8 @@ jobs:
       - name: Build Android Release APK (universal)
         run: |
           cd src-tauri
-          # 指定 --apk true，并使用 --release 进行 Release 构建
-          cargo tauri android build --apk true --release
+          # Tauri 2: release mode is default, use --apk to build APK
+          cargo tauri android build --apk
 
       - name: Upload Android Release APK
         uses: actions/upload-artifact@v4
