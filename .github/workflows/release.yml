@@ -341,3 +341,55 @@ jobs:
           name: android-apk-release
           path: |
             src-tauri/gen/android/**/outputs/**/*.apk
+
+  # 将所有构建产物上传到 Release Draft
+  upload-release:
+    needs: [build-tauri, build-android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version from Cargo.toml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version' src-tauri/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Download Android Debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk-debug
+          path: ./android-debug
+
+      - name: Download Android Release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk-release
+          path: ./android-release
+
+      - name: Prepare Android APKs for upload
+        run: |
+          mkdir -p ./release-assets
+          # 复制并重命名 APK 文件，避免文件名冲突
+          for f in $(find ./android-debug -name "*.apk"); do
+            basename=$(basename "$f")
+            cp "$f" "./release-assets/android-debug-${basename}"
+          done
+          for f in $(find ./android-release -name "*.apk"); do
+            basename=$(basename "$f")
+            cp "$f" "./release-assets/android-release-${basename}"
+          done
+          ls -la ./release-assets
+
+      - name: Upload assets to Release Draft
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-v${{ steps.get_version.outputs.version }}
+          draft: true
+          files: ./release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
