@@ -155,7 +155,7 @@ jobs:
             ## 平台与构建产物
 
             ### 桌面端（Release 附件）
-            - **macOS (Apple Silicon)**：`*-aarch64-apple-darwin.dmg/.app`，使用 *adhoc* 签名，仅供本地测试。首次启动可能被 Gatekeeper 拦截，请右键 → 打开确认。未 notarize。
+            - **macOS (Apple Silicon)**：`*-aarch64-apple-darwin.dmg/.app`，使用 *adhoc* 签名，仅供本地测试。首次启动可能被 Gatekeeper 拦截，请右键 → 打开确认。未 no[...]
             - **macOS (Intel)**：`*-x86_64-apple-darwin.dmg/.app`，同样为 *adhoc* 签名，安全策略与上相同。
             - **Windows**：`*.msi` / `*.exe`，未进行代码签名；Windows SmartScreen 会提示来源未知。安装前建议校验哈希，执行时关注系统告警。
             - **Linux**：`*.AppImage` / `*.deb`，未签名。AppImage 需手动 `chmod +x` 后运行；Deb 包会提示未签名来源。
@@ -166,7 +166,7 @@ jobs:
             - **iOS**：当前未自动产出 iOS 安装包；若需真机或模拟器构建，请手动运行 `cargo tauri ios ...` 并自行处理签名。
 
             ## 签名与安全说明
-            由于仅作为游戏演示，且本仓库公开，所有平台均未使用正式签名证书（macOS 使用 adhoc 签名以便能构建可运行的 app）。因此，操作系统可能会对应用发出安全警告，请谨慎评估风险后决定是否继续安装与运行。
+            由于仅作为游戏演示，且本仓库公开，所有平台均未使用正式签名证书（macOS 使用 adhoc 签名以便能构建可运行的 app）。因此，操作系统可能会[...]
             ## 已知风险
             - 未签名构建在企业环境可能触发安全策略，需在受控环境中使用。
             - 若需自动分发（App Store / Microsoft Store / Snap 等），请在本仓库之外维护签名密钥，避免在公共仓库暴露敏感凭据。
@@ -319,7 +319,8 @@ jobs:
       - name: Build Android Debug APK (universal)
         run: |
           cd src-tauri
-          cargo tauri android build --apk
+          # Tauri CLI 现在要求 --apk 后面显式传入 true/false
+          cargo tauri android build --apk true
 
       - name: Upload Android Debug APK
         uses: actions/upload-artifact@v4
@@ -331,7 +332,8 @@ jobs:
       - name: Build Android Release APK (universal)
         run: |
           cd src-tauri
-          cargo tauri android build --apk -- --release
+          # 指定 --apk true，并使用 --release 进行 Release 构建
+          cargo tauri android build --apk true --release
 
       - name: Upload Android Release APK
         uses: actions/upload-artifact@v4
